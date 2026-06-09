@@ -38,8 +38,8 @@ export interface Income {
   categoryId: string;
   category: IncomeCategory;
   description?: string;
-  clientName?: string;
-  mobileNumber?: string;
+  balamNo?: string;
+  pageNo?: string;
   createdById: string;
   createdBy: { name: string };
   createdAt: string;
@@ -64,9 +64,18 @@ export interface DashboardStats {
   totalExpenses: number;
   netProfit: number;
   todayIncome: number;
-  thisWeekIncome: number;
-  thisMonthIncome: number;
-  thisYearIncome: number;
+  todayExpense: number;
+  selectedMonth: string;
+  monthsRange: number;
+  userSummaryMonth: string;
+  userSections: Array<{
+    userId: string;
+    name: string;
+    role: Role;
+    totalIncome: number;
+    totalExpenses: number;
+    netProfit: number;
+  }>;
   recentTransactions: Array<Income | Expense>;
   monthlyData: Array<{
     month: string;
@@ -74,8 +83,6 @@ export interface DashboardStats {
     expense: number;
     profit: number;
   }>;
-  incomeByCategory: Array<{ name: string; value: number; color: string }>;
-  expenseByCategory: Array<{ name: string; value: number; color: string }>;
 }
 
 export interface ReportData {

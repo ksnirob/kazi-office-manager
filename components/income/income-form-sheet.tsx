@@ -58,6 +58,12 @@ export function IncomeFormSheet({
   });
 
   const categoryIdValue = watch("categoryId");
+  const selectedCategory = categories.find((category) => category.id === categoryIdValue);
+  const selectedCategoryLabel = selectedCategory
+    ? language === "bn"
+      ? selectedCategory.nameBn
+      : selectedCategory.nameEn
+    : undefined;
 
   useEffect(() => {
     if (editItem) {
@@ -66,8 +72,8 @@ export function IncomeFormSheet({
         amount: editItem.amount,
         categoryId: editItem.categoryId,
         description: editItem.description ?? "",
-        clientName: editItem.clientName ?? "",
-        mobileNumber: editItem.mobileNumber ?? "",
+        balamNo: editItem.balamNo ?? "",
+        pageNo: editItem.pageNo ?? "",
       });
     } else {
       reset({ date: format(new Date(), "yyyy-MM-dd") });
@@ -136,7 +142,9 @@ export function IncomeFormSheet({
               onValueChange={(v) => { if (v) setValue("categoryId", v, { shouldValidate: true }); }}
             >
               <SelectTrigger className="rounded-xl h-10">
-                <SelectValue placeholder={t("selectCategory")} />
+                <SelectValue placeholder={t("selectCategory")}>
+                  {selectedCategoryLabel}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl max-h-60">
                 {categories.map((c) => (
@@ -149,25 +157,23 @@ export function IncomeFormSheet({
             {errors.categoryId && <p className="text-destructive text-xs">{errors.categoryId.message}</p>}
           </div>
 
-          {/* Client Name */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">{t("clientName")}</Label>
-            <Input
-              {...register("clientName")}
-              placeholder="Client name"
-              className="rounded-xl h-10"
-            />
-          </div>
-
-          {/* Mobile */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">{t("mobileNumber")}</Label>
-            <Input
-              {...register("mobileNumber")}
-              placeholder="01XXXXXXXXX"
-              type="tel"
-              className="rounded-xl h-10"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">{t("balamNo")}</Label>
+              <Input
+                {...register("balamNo")}
+                placeholder="Balam number"
+                className="rounded-xl h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">{t("pageNo")}</Label>
+              <Input
+                {...register("pageNo")}
+                placeholder="Page number"
+                className="rounded-xl h-10"
+              />
+            </div>
           </div>
 
           {/* Description */}

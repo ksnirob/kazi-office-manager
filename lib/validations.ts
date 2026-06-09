@@ -10,8 +10,8 @@ export const incomeSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
   categoryId: z.string().min(1, "Category is required"),
   description: z.string().optional(),
-  clientName: z.string().optional(),
-  mobileNumber: z.string().optional(),
+  balamNo: z.string().optional(),
+  pageNo: z.string().optional(),
 });
 
 export const expenseSchema = z.object({

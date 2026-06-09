@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
   const where: Record<string, unknown> = {};
   if (search) {
     where.OR = [
-      { clientName: { contains: search, mode: "insensitive" } },
+      { balamNo: { contains: search, mode: "insensitive" } },
+      { pageNo: { contains: search, mode: "insensitive" } },
       { description: { contains: search, mode: "insensitive" } },
-      { mobileNumber: { contains: search, mode: "insensitive" } },
     ];
   }
   if (categoryId) where.categoryId = categoryId;
@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
       amount: parsed.data.amount,
       categoryId: parsed.data.categoryId,
       description: parsed.data.description,
-      clientName: parsed.data.clientName,
-      mobileNumber: parsed.data.mobileNumber,
+      balamNo: parsed.data.balamNo,
+      pageNo: parsed.data.pageNo,
       createdById: (session.user as { id: string }).id,
     },
     include: { category: true, createdBy: { select: { name: true } } },

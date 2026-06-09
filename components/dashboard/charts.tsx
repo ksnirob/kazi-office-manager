@@ -15,6 +15,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { format } from "date-fns";
 import { useLanguage } from "@/contexts/language-context";
 
 interface MonthlyChartProps {
@@ -31,7 +32,7 @@ export function MonthlyBarChart({ data }: MonthlyChartProps) {
 
   const formatted = data.map((d) => ({
     ...d,
-    month: d.month.substring(5), // Show only MM part
+    month: format(new Date(`${d.month}-01T00:00:00`), "MMM yy"),
   }));
 
   return (
@@ -59,7 +60,7 @@ export function MonthlyBarChart({ data }: MonthlyChartProps) {
 export function ProfitLineChart({ data }: MonthlyChartProps) {
   const formatted = data.map((d) => ({
     ...d,
-    month: d.month.substring(5),
+    month: format(new Date(`${d.month}-01T00:00:00`), "MMM yy"),
   }));
 
   return (

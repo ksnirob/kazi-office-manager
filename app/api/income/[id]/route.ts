@@ -41,8 +41,8 @@ export async function PUT(
       amount: parsed.data.amount,
       categoryId: parsed.data.categoryId,
       description: parsed.data.description,
-      clientName: parsed.data.clientName,
-      mobileNumber: parsed.data.mobileNumber,
+      balamNo: parsed.data.balamNo,
+      pageNo: parsed.data.pageNo,
     },
     include: { category: true, createdBy: { select: { name: true } } },
   });

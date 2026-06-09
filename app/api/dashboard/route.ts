@@ -1,130 +1,151 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { startOfDay, startOfWeek, startOfMonth, startOfYear } from "date-fns";
+import {
+  endOfDay,
+  endOfMonth,
+  format,
+  startOfDay,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
 
-export async function GET() {
+function parseMonthParam(value: string | null) {
+  const fallback = format(new Date(), "yyyy-MM");
+  const selectedMonth = value && /^\d{4}-\d{2}$/.test(value) ? value : fallback;
+
+  return {
+    selectedMonth,
+    selectedMonthDate: new Date(`${selectedMonth}-01T00:00:00`),
+  };
+}
+
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const now = new Date();
-  const todayStart = startOfDay(now);
-  const weekStart = startOfWeek(now, { weekStartsOn: 0 });
-  const monthStart = startOfMonth(now);
-  const yearStart = startOfYear(now);
+  const { searchParams } = new URL(req.url);
+  const { selectedMonth, selectedMonthDate } = parseMonthParam(searchParams.get("month"));
+  const { selectedMonth: userSummaryMonth } = parseMonthParam(searchParams.get("userSummaryMonth"));
+  const monthsParam = Number(searchParams.get("months") ?? "6");
+  const monthsRange = monthsParam === 12 ? 12 : 6;
+
+  const monthStart = startOfMonth(selectedMonthDate);
+  const monthEnd = endOfMonth(selectedMonthDate);
+  const userSummaryDate = new Date(`${userSummaryMonth}-01T00:00:00`);
+  const userSummaryStart = startOfMonth(userSummaryDate);
+  const userSummaryEnd = endOfMonth(userSummaryDate);
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+  const overviewStart = startOfMonth(subMonths(selectedMonthDate, monthsRange - 1));
+  const overviewEnd = endOfMonth(selectedMonthDate);
 
   const [
     totalIncomeAgg,
     totalExpenseAgg,
     todayIncomeAgg,
-    weekIncomeAgg,
-    monthIncomeAgg,
-    yearIncomeAgg,
+    todayExpenseAgg,
     recentIncomes,
     recentExpenses,
-    monthlyRaw,
-    incomeByCat,
-    expenseByCat,
+    overviewIncomes,
+    overviewExpenses,
+    users,
+    incomeByUser,
+    expenseByUser,
   ] = await Promise.all([
-    db.income.aggregate({ _sum: { amount: true } }),
-    db.expense.aggregate({ _sum: { amount: true } }),
-    db.income.aggregate({ where: { date: { gte: todayStart } }, _sum: { amount: true } }),
-    db.income.aggregate({ where: { date: { gte: weekStart } }, _sum: { amount: true } }),
-    db.income.aggregate({ where: { date: { gte: monthStart } }, _sum: { amount: true } }),
-    db.income.aggregate({ where: { date: { gte: yearStart } }, _sum: { amount: true } }),
+    db.income.aggregate({ where: { date: { gte: monthStart, lte: monthEnd } }, _sum: { amount: true } }),
+    db.expense.aggregate({ where: { date: { gte: monthStart, lte: monthEnd } }, _sum: { amount: true } }),
+    db.income.aggregate({ where: { date: { gte: todayStart, lte: todayEnd } }, _sum: { amount: true } }),
+    db.expense.aggregate({ where: { date: { gte: todayStart, lte: todayEnd } }, _sum: { amount: true } }),
     db.income.findMany({
-      take: 5,
+      where: { date: { gte: monthStart, lte: monthEnd } },
+      take: 8,
       orderBy: { date: "desc" },
       include: { category: true, createdBy: { select: { name: true } } },
     }),
     db.expense.findMany({
-      take: 5,
+      where: { date: { gte: monthStart, lte: monthEnd } },
+      take: 8,
       orderBy: { date: "desc" },
       include: { category: true, createdBy: { select: { name: true } } },
     }),
-    // Monthly data for last 12 months (SQLite syntax)
-    db.$queryRaw<Array<{ month: string; type: string; total: number }>>`
-      SELECT 
-        strftime('%Y-%m', date) as month,
-        'income' as type,
-        SUM(amount) as total
-      FROM "Income"
-      WHERE date >= ${new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString()}
-      GROUP BY strftime('%Y-%m', date)
-      UNION ALL
-      SELECT 
-        strftime('%Y-%m', date) as month,
-        'expense' as type,
-        SUM(amount) as total
-      FROM "Expense"
-      WHERE date >= ${new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString()}
-      GROUP BY strftime('%Y-%m', date)
-      ORDER BY month
-    `,
+    db.income.findMany({
+      where: { date: { gte: overviewStart, lte: overviewEnd } },
+      select: { date: true, amount: true },
+    }),
+    db.expense.findMany({
+      where: { date: { gte: overviewStart, lte: overviewEnd } },
+      select: { date: true, amount: true },
+    }),
+    db.user.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, role: true },
+    }),
     db.income.groupBy({
-      by: ["categoryId"],
+      by: ["createdById"],
+      where: { date: { gte: userSummaryStart, lte: userSummaryEnd } },
       _sum: { amount: true },
-      orderBy: { _sum: { amount: "desc" } },
-      take: 6,
     }),
     db.expense.groupBy({
-      by: ["categoryId"],
+      by: ["createdById"],
+      where: { date: { gte: userSummaryStart, lte: userSummaryEnd } },
       _sum: { amount: true },
-      orderBy: { _sum: { amount: "desc" } },
-      take: 6,
     }),
   ]);
 
-  // Fetch category names
-  const incomeCatIds = incomeByCat.map((item) => item.categoryId);
-  const expenseCatIds = expenseByCat.map((item) => item.categoryId);
+  const monthKeys = Array.from({ length: monthsRange }, (_, index) =>
+    format(startOfMonth(subMonths(selectedMonthDate, monthsRange - index - 1)), "yyyy-MM")
+  );
 
-  const [incomeCategories, expenseCategories] = await Promise.all([
-    db.incomeCategory.findMany({ where: { id: { in: incomeCatIds } } }),
-    db.expenseCategory.findMany({ where: { id: { in: expenseCatIds } } }),
-  ]);
+  const monthMap = new Map<string, { income: number; expense: number }>(
+    monthKeys.map((month) => [month, { income: 0, expense: 0 }])
+  );
 
-  const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
-
-  const incomeByCategoryData = incomeByCat.map((item, idx) => {
-    const cat = incomeCategories.find((c) => c.id === item.categoryId);
-    return {
-      name: cat?.nameEn ?? "Unknown",
-      value: Number(item._sum.amount ?? 0),
-      color: COLORS[idx % COLORS.length],
-    };
-  });
-
-  const expenseByCategoryData = expenseByCat.map((item, idx) => {
-    const cat = expenseCategories.find((c) => c.id === item.categoryId);
-    return {
-      name: cat?.nameEn ?? "Unknown",
-      value: Number(item._sum.amount ?? 0),
-      color: COLORS[idx % COLORS.length],
-    };
-  });
-
-  // Build monthly chart data
-  const monthMap = new Map<string, { income: number; expense: number }>();
-  for (const row of monthlyRaw as Array<{ month: string; type: string; total: number | bigint }>) {
-    const key = row.month;
-    if (!monthMap.has(key)) monthMap.set(key, { income: 0, expense: 0 });
-    const entry = monthMap.get(key)!;
-    if (row.type === "income") entry.income = Number(row.total);
-    else entry.expense = Number(row.total);
+  for (const income of overviewIncomes) {
+    const monthKey = format(income.date, "yyyy-MM");
+    const currentMonth = monthMap.get(monthKey);
+    if (!currentMonth) continue;
+    currentMonth.income += income.amount;
   }
 
-  const monthlyData = Array.from(monthMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, data]) => ({
-      month,
-      income: data.income,
-      expense: data.expense,
-      profit: data.income - data.expense,
-    }));
+  for (const expense of overviewExpenses) {
+    const monthKey = format(expense.date, "yyyy-MM");
+    const currentMonth = monthMap.get(monthKey);
+    if (!currentMonth) continue;
+    currentMonth.expense += expense.amount;
+  }
 
-  const totalIncome = Number(totalIncomeAgg._sum.amount ?? 0);
-  const totalExpenses = Number(totalExpenseAgg._sum.amount ?? 0);
+  const monthlyData = monthKeys.map((month) => {
+    const totals = monthMap.get(month) ?? { income: 0, expense: 0 };
+    return {
+      month,
+      income: totals.income,
+      expense: totals.expense,
+      profit: totals.income - totals.expense,
+    };
+  });
+
+  const incomeByUserMap = new Map(
+    incomeByUser.map((item) => [item.createdById, Number(item._sum.amount ?? 0)])
+  );
+  const expenseByUserMap = new Map(
+    expenseByUser.map((item) => [item.createdById, Number(item._sum.amount ?? 0)])
+  );
+
+  const userSections = users.map((user) => {
+    const income = incomeByUserMap.get(user.id) ?? 0;
+    const expense = expenseByUserMap.get(user.id) ?? 0;
+
+    return {
+      userId: user.id,
+      name: user.name,
+      role: user.role as "ADMIN" | "MANAGER" | "STAFF",
+      totalIncome: income,
+      totalExpenses: expense,
+      netProfit: income - expense,
+    };
+  });
 
   const recentTransactions = [
     ...recentIncomes.map((income) => ({ ...income, type: "income" as const })),
@@ -133,17 +154,20 @@ export async function GET() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 8);
 
+  const totalIncome = Number(totalIncomeAgg._sum.amount ?? 0);
+  const totalExpenses = Number(totalExpenseAgg._sum.amount ?? 0);
+
   return NextResponse.json({
     totalIncome,
     totalExpenses,
     netProfit: totalIncome - totalExpenses,
     todayIncome: Number(todayIncomeAgg._sum.amount ?? 0),
-    thisWeekIncome: Number(weekIncomeAgg._sum.amount ?? 0),
-    thisMonthIncome: Number(monthIncomeAgg._sum.amount ?? 0),
-    thisYearIncome: Number(yearIncomeAgg._sum.amount ?? 0),
+    todayExpense: Number(todayExpenseAgg._sum.amount ?? 0),
+    selectedMonth,
+    monthsRange,
+    userSummaryMonth,
+    userSections,
     recentTransactions,
     monthlyData,
-    incomeByCategory: incomeByCategoryData,
-    expenseByCategory: expenseByCategoryData,
   });
 }

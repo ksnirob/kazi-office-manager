@@ -45,6 +45,11 @@ export function ExpenseFormSheet({ open, onOpenChange, editItem, categories, onS
   });
 
   const categoryIdValue = watch("categoryId");
+  const selectedCategoryLabel = categories.find((category) => category.id === categoryIdValue)
+    ? language === "bn"
+      ? categories.find((category) => category.id === categoryIdValue)?.nameBn
+      : categories.find((category) => category.id === categoryIdValue)?.nameEn
+    : undefined;
 
   useEffect(() => {
     if (editItem) {
@@ -109,7 +114,9 @@ export function ExpenseFormSheet({ open, onOpenChange, editItem, categories, onS
               onValueChange={(v) => { if (v) setValue("categoryId", v, { shouldValidate: true }); }}
             >
               <SelectTrigger className="rounded-xl h-10">
-                <SelectValue placeholder={t("selectCategory")} />
+                <SelectValue placeholder={t("selectCategory")}>
+                  {selectedCategoryLabel}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl max-h-60">
                 {categories.map((c) => (

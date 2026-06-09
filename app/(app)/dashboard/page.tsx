@@ -1,21 +1,28 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
 import { Header } from "@/components/layout/header";
 import { StatCard, HeroStatCard } from "@/components/dashboard/stat-card";
-import { MonthlyBarChart, ProfitLineChart, CategoryPieChart } from "@/components/dashboard/charts";
+import { MonthlyBarChart } from "@/components/dashboard/charts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   TrendingUp,
   TrendingDown,
   DollarSign,
   CalendarDays,
-  Calendar,
-  CalendarRange,
-  CalendarCheck,
   ArrowRight,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -26,22 +33,70 @@ function formatCurrency(amount: number) {
 }
 
 export default function DashboardPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [monthsRange, setMonthsRange] = useState("6");
+  const [userSummaryMonth, setUserSummaryMonth] = useState(format(new Date(), "yyyy-MM"));
+
+  const params = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set("month", selectedMonth);
+    searchParams.set("months", monthsRange);
+    searchParams.set("userSummaryMonth", userSummaryMonth);
+    return searchParams.toString();
+  }, [selectedMonth, monthsRange, userSummaryMonth]);
+
+  const selectedRangeLabel = monthsRange === "12" ? t("last12Months") : t("last6Months");
+  const selectedMonthLabel = format(new Date(`${selectedMonth}-01T00:00:00`), "MMMM yyyy");
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["dashboard"],
-    queryFn: () => fetch("/api/dashboard").then((r) => r.json()),
+    queryKey: ["dashboard", selectedMonth, monthsRange, userSummaryMonth],
+    queryFn: () => fetch(`/api/dashboard?${params}`).then((r) => r.json()),
+    placeholderData: (previousData) => previousData,
     refetchInterval: 30000,
   });
+
+  const userSummaryLabel = stats?.userSummaryMonth
+    ? format(new Date(`${stats.userSummaryMonth}-01T00:00:00`), "MMMM yyyy")
+    : selectedMonthLabel;
 
   if (isLoading) return <DashboardSkeleton />;
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header title={t("appName")} subtitle={t("appSubtitle")} />
+      <Header title={t("appName")} subtitle={selectedMonthLabel} />
 
       <div className="flex-1 px-4 py-4 space-y-5">
-        {/* Hero Cards */}
+        <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t("selectedMonth")}
+              </p>
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(event) => setSelectedMonth(event.target.value)}
+                className="rounded-xl h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t("overviewRange")}
+              </p>
+              <Select value={monthsRange} onValueChange={setMonthsRange}>
+                <SelectTrigger className="rounded-xl h-10">
+                  <SelectValue>{selectedRangeLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="6">{t("last6Months")}</SelectItem>
+                  <SelectItem value="12">{t("last12Months")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-3">
           <div className="grid grid-cols-2 gap-3">
             <HeroStatCard
@@ -65,7 +120,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Period Stats */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             title={t("todayIncome")}
@@ -74,29 +128,19 @@ export default function DashboardPage() {
             color="blue"
           />
           <StatCard
-            title={t("thisWeek")}
-            value={formatCurrency(stats?.thisWeekIncome ?? 0)}
-            icon={Calendar}
+            title={t("todayExpense")}
+            value={formatCurrency(stats?.todayExpense ?? 0)}
+            icon={TrendingDown}
             color="orange"
-          />
-          <StatCard
-            title={t("thisMonth")}
-            value={formatCurrency(stats?.thisMonthIncome ?? 0)}
-            icon={CalendarRange}
-            color="purple"
-          />
-          <StatCard
-            title={t("thisYear")}
-            value={formatCurrency(stats?.thisYearIncome ?? 0)}
-            icon={CalendarCheck}
-            color="green"
           />
         </div>
 
-        {/* Monthly Bar Chart */}
         <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Monthly Overview</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">{t("monthlyOverview")}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{selectedRangeLabel}</p>
+            </div>
             <Link href="/reports" className="text-xs text-primary flex items-center gap-1">
               {t("viewAll")} <ArrowRight className="h-3 w-3" />
             </Link>
@@ -110,23 +154,59 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Profit Line Chart */}
-        {stats?.monthlyData && stats.monthlyData.length > 0 && (
-          <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Trend Analysis</h3>
-            <ProfitLineChart data={stats.monthlyData} />
+        <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Users className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">{t("teamSummary")}</h3>
+            </div>
+            <Input
+              type="month"
+              value={userSummaryMonth}
+              onChange={(event) => setUserSummaryMonth(event.target.value)}
+              className="h-9 w-36 rounded-xl text-xs"
+            />
           </div>
-        )}
 
-        {/* Income by Category Pie */}
-        {stats?.incomeByCategory && stats.incomeByCategory.length > 0 && (
-          <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Income by Category</h3>
-            <CategoryPieChart data={stats.incomeByCategory} />
-          </div>
-        )}
+          {stats?.userSections.length ? (
+            <div className="space-y-3">
+              {stats.userSections.map((user) => (
+                <div key={user.userId} className="rounded-2xl border border-border/50 p-3 bg-background/60">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{userSummaryLabel}</p>
+                    </div>
+                    <Badge variant="secondary" className="rounded-lg text-[10px] uppercase tracking-wide">
+                      {user.role}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-xl bg-emerald-500/10 p-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("totalIncome")}</p>
+                      <p className="text-sm font-semibold text-emerald-600 mt-1">{formatCurrency(user.totalIncome)}</p>
+                    </div>
+                    <div className="rounded-xl bg-red-500/10 p-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("totalExpenses")}</p>
+                      <p className="text-sm font-semibold text-red-600 mt-1">{formatCurrency(user.totalExpenses)}</p>
+                    </div>
+                    <div className="rounded-xl bg-primary/10 p-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("netProfit")}</p>
+                      <p className={`text-sm font-semibold mt-1 ${user.netProfit >= 0 ? "text-primary" : "text-red-600"}`}>
+                        {formatCurrency(user.netProfit)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-6">{t("noUsers")}</p>
+          )}
+        </div>
 
-        {/* Recent Transactions */}
         <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-foreground">
@@ -139,11 +219,11 @@ export default function DashboardPage() {
 
           {stats?.recentTransactions && stats.recentTransactions.length > 0 ? (
             <div className="space-y-2">
-              {(stats.recentTransactions as unknown as Array<Record<string, unknown>>).slice(0, 6).map((tx, i) => {
+              {(stats.recentTransactions as unknown as Array<Record<string, unknown>>).slice(0, 6).map((tx, index) => {
                 const isIncome = tx.type === "income";
                 return (
                   <div
-                    key={i}
+                    key={index}
                     className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0"
                   >
                     <div className="flex items-center gap-3">
@@ -158,7 +238,9 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-xs font-medium text-foreground">
-                          {(tx.category as Record<string, string>)?.nameEn}
+                          {language === "bn"
+                            ? ((tx.category as Record<string, string>)?.nameBn ?? (tx.category as Record<string, string>)?.nameEn)
+                            : (tx.category as Record<string, string>)?.nameEn}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
                           {format(new Date(tx.date as string), "dd MMM yyyy")}
@@ -195,17 +277,19 @@ function DashboardSkeleton() {
         <Skeleton className="h-6 w-32" />
       </div>
       <div className="p-4 space-y-4">
+        <Skeleton className="h-24 rounded-2xl" />
         <div className="grid grid-cols-2 gap-3">
           <Skeleton className="h-24 rounded-2xl" />
           <Skeleton className="h-24 rounded-2xl" />
         </div>
         <Skeleton className="h-24 rounded-2xl" />
         <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-20 rounded-2xl" />
+          {[1, 2].map((item) => (
+            <Skeleton key={item} className="h-20 rounded-2xl" />
           ))}
         </div>
         <Skeleton className="h-56 rounded-2xl" />
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
     </div>
   );

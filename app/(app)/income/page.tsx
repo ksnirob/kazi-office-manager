@@ -32,8 +32,6 @@ import {
   TrendingUp,
   Pencil,
   Trash2,
-  Phone,
-  User,
   Calendar,
   X,
 } from "lucide-react";
@@ -264,6 +262,11 @@ function IncomeCard({
   onDelete: () => void;
 }) {
   const catName = language === "bn" ? item.category.nameBn : item.category.nameEn;
+  const balamLabel = language === "bn" ? "বালাম" : "Balam";
+  const pageLabel = language === "bn" ? "পৃষ্ঠা" : "Page";
+  const balamValue = item.balamNo?.trim();
+  const pageValue = item.pageNo?.trim();
+
   return (
     <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -281,15 +284,21 @@ function IncomeCard({
                 {format(new Date(item.date), "dd MMM yyyy")}
               </span>
             </div>
-            {item.clientName && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <User className="h-3 w-3" /> {item.clientName}
-              </p>
-            )}
-            {item.mobileNumber && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Phone className="h-3 w-3" /> {item.mobileNumber}
-              </p>
+            {(balamValue || pageValue) && (
+              <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                {balamValue && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+                    <span className="font-medium text-foreground">{balamLabel}:</span>
+                    <span>{balamValue}</span>
+                  </span>
+                )}
+                {pageValue && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+                    <span className="font-medium text-foreground">{pageLabel}:</span>
+                    <span>{pageValue}</span>
+                  </span>
+                )}
+              </div>
             )}
             {item.description && (
               <p className="text-xs text-muted-foreground mt-1 truncate">{item.description}</p>

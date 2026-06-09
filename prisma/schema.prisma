@@ -50,6 +50,8 @@ model Income {
   categoryId   String
   category     IncomeCategory @relation(fields: [categoryId], references: [id])
   description  String?
+  balamNo      String?
+  pageNo       String?
   clientName   String?
   mobileNumber String?
   createdById  String
