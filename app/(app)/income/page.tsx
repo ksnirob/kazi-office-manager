@@ -69,6 +69,13 @@ export default function IncomePage() {
     queryFn: () => fetch("/api/categories?type=income").then((r) => r.json()),
   });
 
+  const selectedCategory = categories?.find((category) => category.id === categoryId);
+  const selectedCategoryLabel = selectedCategory
+    ? language === "bn"
+      ? selectedCategory.nameBn
+      : selectedCategory.nameEn
+    : undefined;
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => fetch(`/api/income/${id}`, { method: "DELETE" }).then((r) => r.json()),
     onSuccess: () => {
@@ -156,9 +163,11 @@ export default function IncomePage() {
 
           {showFilters && (
             <div className="rounded-2xl bg-card border border-border/50 p-3 space-y-2">
-              <Select value={categoryId} onValueChange={(v) => { if (v && v.trim()) setCategoryId(v); }}>
+              <Select value={categoryId} onValueChange={(value) => setCategoryId(value?.trim() ? value : "")}>
                 <SelectTrigger className="rounded-xl h-10">
-                  <SelectValue placeholder={t("allCategories")} />
+                  <SelectValue placeholder={t("allCategories")}>
+                    {selectedCategoryLabel}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value=" ">{t("allCategories")}</SelectItem>
