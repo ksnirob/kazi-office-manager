@@ -1,4 +1,4 @@
-const CACHE_NAME = "kazi-office-v1";
+const CACHE_NAME = "kazi-office-v2";
 const OFFLINE_URL = "/offline";
 
 const STATIC_ASSETS = [
@@ -33,6 +33,12 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   
   const url = new URL(event.request.url);
+
+  // Never cache Next.js build assets. They change between dev refreshes and deploys.
+  if (url.pathname.startsWith("/_next/")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   
   // API calls: network first, then offline
   if (url.pathname.startsWith("/api/")) {

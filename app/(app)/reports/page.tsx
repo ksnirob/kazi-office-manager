@@ -10,8 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Download, Printer } from "lucide-react";
 import { format } from "date-fns";
@@ -141,19 +140,17 @@ export default function ReportsPage() {
             {data.incomeByCategory.length > 0 && (
               <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
                 <h3 className="text-sm font-semibold mb-3">Income by Category</h3>
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={data.incomeByCategory} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
-                    <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                    <YAxis dataKey="name" type="category" width={90} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                      tickFormatter={(v) => v.length > 12 ? v.substring(0, 12) + "…" : v} />
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie data={data.incomeByCategory} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={60} paddingAngle={3}>
+                      {data.incomeByCategory.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
                     <Tooltip
                       contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: 11 }}
                       formatter={(v) => [`৳${Number(v).toLocaleString()}`, ""]}
                     />
-                    <Bar dataKey="total" radius={[0, 4, 4, 0]}>
-                      {data.incomeByCategory.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Bar>
-                  </BarChart>
+                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10 }} />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
             )}

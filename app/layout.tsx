@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/contexts/language-context";
+import { ThemeProvider } from "@/contexts/theme-context";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 import { ServiceWorkerRegister } from "@/components/sw-register";
@@ -61,7 +61,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={`${poppins.variable} ${hindSiliguri.variable} min-h-full`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider>
           <LanguageProvider>
             <Providers>
               <ServiceWorkerRegister />

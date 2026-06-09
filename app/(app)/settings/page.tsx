@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/contexts/theme-context";
 import { useSession, signOut } from "next-auth/react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
