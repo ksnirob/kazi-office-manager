@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String
+  role         String     @default("STAFF")
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  incomes      Income[]
+  expenses     Expense[]
+  auditLogs    AuditLog[]
+}
+
+model IncomeCategory {
+  id        String   @id @default(cuid())
+  nameEn    String
+  nameBn    String
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  incomes   Income[]
+}
+
+model ExpenseCategory {
+  id        String    @id @default(cuid())
+  nameEn    String
+  nameBn    String
+  isDefault Boolean   @default(false)
+  isActive  Boolean   @default(true)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  expenses  Expense[]
+}
+
+model Income {
+  id           String         @id @default(cuid())
+  date         DateTime
+  amount       Float
+  categoryId   String
+  category     IncomeCategory @relation(fields: [categoryId], references: [id])
+  description  String?
+  clientName   String?
+  mobileNumber String?
+  createdById  String
+  createdBy    User           @relation(fields: [createdById], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  date        DateTime
+  amount      Float
+  categoryId  String
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  description String?
+  createdById String
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  details   String?
+  createdAt DateTime @default(now())
+}
