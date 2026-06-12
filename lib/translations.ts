@@ -28,7 +28,7 @@ export const translations = {
     // Income
     addIncome: "Add Income",
     editIncome: "Edit Income",
-    incomeList: "Income List",
+    incomeList: "Income",
     incomeCategory: "Income Category",
     date: "Date",
     amount: "Amount",
@@ -63,7 +63,7 @@ export const translations = {
     // Expenses
     addExpense: "Add Expense",
     editExpense: "Edit Expense",
-    expenseList: "Expense List",
+    expenseList: "Expense",
     expenseCategory: "Expense Category",
 
     // Expense Categories
@@ -180,7 +180,7 @@ export const translations = {
     // Income
     addIncome: "আয় যোগ করুন",
     editIncome: "আয় সম্পাদনা",
-    incomeList: "আয়ের তালিকা",
+    incomeList: "আয়",
     incomeCategory: "আয়ের বিভাগ",
     date: "তারিখ",
     amount: "পরিমাণ",
@@ -215,7 +215,7 @@ export const translations = {
     // Expenses
     addExpense: "ব্যয় যোগ করুন",
     editExpense: "ব্যয় সম্পাদনা",
-    expenseList: "ব্যয়ের তালিকা",
+    expenseList: "ব্যয়",
     expenseCategory: "ব্যয়ের বিভাগ",
 
     // Expense Categories
