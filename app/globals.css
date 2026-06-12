@@ -132,3 +132,25 @@
     @apply font-sans;
   }
 }
+
+.report-pie-chart .recharts-wrapper,
+.report-pie-chart .recharts-surface,
+.report-pie-chart .recharts-responsive-container,
+.report-pie-chart .recharts-sector,
+.report-pie-chart svg,
+.report-pie-chart g,
+.report-pie-chart path,
+.report-pie-chart *:focus,
+.report-pie-chart *:focus-visible,
+.dashboard-chart .recharts-wrapper,
+.dashboard-chart .recharts-surface,
+.dashboard-chart .recharts-responsive-container,
+.dashboard-chart svg,
+.dashboard-chart g,
+.dashboard-chart path,
+.dashboard-chart rect,
+.dashboard-chart *:focus,
+.dashboard-chart *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

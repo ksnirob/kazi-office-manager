@@ -4,6 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  image?: string | null;
   role: Role;
   isActive: boolean;
   createdAt: string;

@@ -7,19 +7,114 @@ import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, ResponsiveContainer, Sector,
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Download, Printer } from "lucide-react";
 import { format } from "date-fns";
 import type { ReportData } from "@/types";
 
 const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#14b8a6"];
+const RADIAN = Math.PI / 180;
+
+interface ActivePieShapeProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  startAngle?: number;
+  endAngle?: number;
+  fill?: string;
+  payload?: {
+    name?: string;
+    total?: number;
+  };
+}
+
+function getSliceAmountLabel(props: ActivePieShapeProps) {
+  const {
+    cx = 0,
+    cy = 0,
+    midAngle = 0,
+    innerRadius = 0,
+    outerRadius = 0,
+    payload,
+  } = props;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.64;
+  const label = formatSliceCurrency(payload?.total ?? 0);
+  const x = cx + Math.cos(-midAngle * RADIAN) * radius;
+  const y = cy + Math.sin(-midAngle * RADIAN) * radius;
+  let rotation = ((-midAngle % 360) + 360) % 360;
+  if (rotation > 90 && rotation < 270) rotation += 180;
+  rotation = ((rotation + 180) % 360) - 180;
+
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fill="#fff"
+      fontSize={9.5}
+      fontWeight={900}
+      paintOrder="stroke"
+      stroke="rgba(0,0,0,0.38)"
+      strokeWidth={1.4}
+      transform={`rotate(${rotation} ${x} ${y})`}
+      style={{ pointerEvents: "none", userSelect: "none" }}
+    >
+      {label}
+    </text>
+  );
+}
 
 function formatCurrency(n: number) {
   return `৳${n.toLocaleString("en-BD", { maximumFractionDigits: 0 })}`;
+}
+
+function formatSliceCurrency(n: number) {
+  return `\u09F3${n.toLocaleString("en-BD", { maximumFractionDigits: 0 })}`;
+}
+
+function renderActivePieSlice(props: ActivePieShapeProps, isActive: boolean) {
+  const {
+    cx = 0,
+    cy = 0,
+    midAngle = 0,
+    innerRadius = 0,
+    outerRadius = 0,
+    startAngle = 0,
+    endAngle = 0,
+    fill = "#6366f1",
+  } = props;
+  const offsetX = isActive ? Math.cos(-midAngle * RADIAN) * 9 : 0;
+  const offsetY = isActive ? Math.sin(-midAngle * RADIAN) * 9 : 0;
+
+  return (
+    <g style={{ outline: "none" }}>
+      <g
+        transform={`translate(${offsetX} ${offsetY})`}
+        style={{ transition: "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)" }}
+      >
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius + (isActive ? 2 : 0)}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+          stroke="hsl(var(--card))"
+          strokeWidth={2}
+          style={{ outline: "none", transition: "filter 220ms ease" }}
+        />
+        {getSliceAmountLabel(props)}
+      </g>
+    </g>
+  );
 }
 
 export default function ReportsPage() {
@@ -27,6 +122,8 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("monthly");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [activeIncomeIndex, setActiveIncomeIndex] = useState<number | undefined>();
+  const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | undefined>();
 
   const params = new URLSearchParams();
   if (activeTab === "custom") {
@@ -139,38 +236,92 @@ export default function ReportsPage() {
             {/* Income by Category Chart */}
             {data.incomeByCategory.length > 0 && (
               <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
-                <h3 className="text-sm font-semibold mb-3">Income by Category</h3>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie data={data.incomeByCategory} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={60} paddingAngle={3}>
-                      {data.incomeByCategory.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: 11 }}
-                      formatter={(v) => [`৳${Number(v).toLocaleString()}`, ""]}
-                    />
-                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <h3 className="text-sm font-semibold mb-2">Income by Category</h3>
+                <div className="report-pie-chart h-44 outline-none" onMouseDown={(event) => event.preventDefault()}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart
+                      accessibilityLayer={false}
+                      tabIndex={-1}
+                      margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+                      style={{ outline: "none" }}
+                    >
+                      <Pie
+                        data={data.incomeByCategory}
+                        dataKey="total"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={66}
+                        paddingAngle={3}
+                        shape={(props: ActivePieShapeProps, index: number) => renderActivePieSlice(props, index === activeIncomeIndex)}
+                        onClick={(_, index: number, event) => {
+                          (event.currentTarget as SVGElement & { blur?: () => void }).blur?.();
+                          setActiveIncomeIndex(index);
+                        }}
+                        rootTabIndex={-1}
+                        style={{ outline: "none", cursor: "pointer" }}
+                      >
+                        {data.incomeByCategory.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} style={{ outline: "none" }} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1.5">
+                  {data.incomeByCategory.map((item, i) => (
+                    <div key={item.name} className="flex min-w-0 items-center gap-1.5 text-[10px] leading-tight text-muted-foreground">
+                      <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                      <span className="break-words">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Expense by Category */}
             {data.expenseByCategory.length > 0 && (
               <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
-                <h3 className="text-sm font-semibold mb-3">Expense by Category</h3>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie data={data.expenseByCategory} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={60} paddingAngle={3}>
-                      {data.expenseByCategory.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: 11 }}
-                      formatter={(v) => [`৳${Number(v).toLocaleString()}`, ""]}
-                    />
-                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <h3 className="text-sm font-semibold mb-2">Expense by Category</h3>
+                <div className="report-pie-chart h-44 outline-none" onMouseDown={(event) => event.preventDefault()}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart
+                      accessibilityLayer={false}
+                      tabIndex={-1}
+                      margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+                      style={{ outline: "none" }}
+                    >
+                      <Pie
+                        data={data.expenseByCategory}
+                        dataKey="total"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={66}
+                        paddingAngle={3}
+                        shape={(props: ActivePieShapeProps, index: number) => renderActivePieSlice(props, index === activeExpenseIndex)}
+                        onClick={(_, index: number, event) => {
+                          (event.currentTarget as SVGElement & { blur?: () => void }).blur?.();
+                          setActiveExpenseIndex(index);
+                        }}
+                        rootTabIndex={-1}
+                        style={{ outline: "none", cursor: "pointer" }}
+                      >
+                        {data.expenseByCategory.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} style={{ outline: "none" }} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1.5">
+                  {data.expenseByCategory.map((item, i) => (
+                    <div key={item.name} className="flex min-w-0 items-center gap-1.5 text-[10px] leading-tight text-muted-foreground">
+                      <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                      <span className="break-words">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

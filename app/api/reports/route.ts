@@ -1,6 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns";
+
+function parseDateParam(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function emptyReport(fromDate: Date | null = null, toDate: Date | null = null) {
+  return NextResponse.json({
+    totalIncome: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    incomes: [],
+    expenses: [],
+    incomeByCategory: [],
+    expenseByCategory: [],
+    fromDate: fromDate?.toISOString() ?? null,
+    toDate: toDate?.toISOString() ?? null,
+  });
+}
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,35 +41,36 @@ export async function GET(req: NextRequest) {
   const to = searchParams.get("to");
 
   let fromDate: Date;
-  let toDate: Date = new Date();
-  toDate.setHours(23, 59, 59, 999);
+  let toDate: Date;
 
   const now = new Date();
 
   switch (type) {
     case "daily":
-      fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      fromDate = startOfDay(now);
+      toDate = endOfDay(now);
       break;
     case "weekly":
-      fromDate = new Date(now);
-      fromDate.setDate(now.getDate() - now.getDay());
-      fromDate.setHours(0, 0, 0, 0);
+      fromDate = startOfWeek(now);
+      toDate = endOfWeek(now);
       break;
     case "monthly":
-      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      fromDate = startOfMonth(now);
+      toDate = endOfMonth(now);
       break;
     case "yearly":
-      fromDate = new Date(now.getFullYear(), 0, 1);
+      fromDate = startOfYear(now);
+      toDate = endOfYear(now);
       break;
     case "custom":
-      fromDate = from ? new Date(from) : new Date(now.getFullYear(), now.getMonth(), 1);
-      if (to) {
-        toDate = new Date(to);
-        toDate.setHours(23, 59, 59, 999);
-      }
+      if (!from || !to) return emptyReport();
+      fromDate = startOfDay(parseDateParam(from));
+      toDate = endOfDay(parseDateParam(to));
+      if (fromDate > toDate) return emptyReport(fromDate, toDate);
       break;
     default:
-      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      fromDate = startOfMonth(now);
+      toDate = endOfMonth(now);
   }
 
   const dateFilter = { gte: fromDate, lte: toDate };

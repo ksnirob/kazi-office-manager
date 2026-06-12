@@ -36,8 +36,15 @@ export function MonthlyBarChart({ data }: MonthlyChartProps) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={formatted} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+    <div className="dashboard-chart h-[200px] outline-none" onMouseDown={(event) => event.preventDefault()}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={formatted}
+          accessibilityLayer={false}
+          tabIndex={-1}
+          margin={{ top: 5, right: 5, bottom: 5, left: -20 }}
+          style={{ outline: "none" }}
+        >
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
         <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
@@ -52,8 +59,9 @@ export function MonthlyBarChart({ data }: MonthlyChartProps) {
         />
         <Bar dataKey="income" fill="#22c55e" radius={[4, 4, 0, 0]} name={t("totalIncome")} />
         <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name={t("totalExpenses")} />
-      </BarChart>
-    </ResponsiveContainer>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 

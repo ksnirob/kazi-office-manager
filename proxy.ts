@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export default auth((req: NextRequest & { auth?: { user?: { id?: string } } | null }) => {
+export const proxy = auth((req: NextRequest & { auth?: { user?: { id?: string } } | null }) => {
   const isLoggedIn = !!req.auth;
   const pathname = req.nextUrl.pathname;
 

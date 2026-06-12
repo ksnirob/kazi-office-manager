@@ -95,7 +95,7 @@ export function HeroStatCard({
           <p className="text-sm font-medium text-white/80">{title}</p>
           <p className="text-3xl font-bold mt-1">{value}</p>
         </div>
-        <div className="p-2.5 rounded-xl bg-white/20">
+        <div className="p-1.5 rounded-xl bg-white/20">
           <Icon className="h-6 w-6 text-white" />
         </div>
       </div>

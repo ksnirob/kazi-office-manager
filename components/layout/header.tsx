@@ -3,7 +3,8 @@
 import { useTheme } from "@/contexts/theme-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Languages, LogOut, User, Bell } from "lucide-react";
+import { Moon, Sun, Languages, LogOut, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -28,6 +29,11 @@ export function Header({ title, subtitle, rightAction }: HeaderProps) {
   const { language, setLanguage } = useLanguage();
   const { data: session } = useSession();
   const router = useRouter();
+  const { data: profile } = useQuery<{ image?: string | null }>({
+    queryKey: ["profile"],
+    queryFn: () => fetch("/api/profile").then((res) => res.json()),
+    enabled: Boolean(session?.user),
+  });
 
   const initials = session?.user?.name
     ?.split(" ")
@@ -74,6 +80,9 @@ export function Header({ title, subtitle, rightAction }: HeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger className="h-9 w-9 p-0 rounded-xl inline-flex items-center justify-center hover:bg-accent transition-colors">
               <Avatar className="h-8 w-8">
+                {profile?.image && (
+                  <AvatarImage src={profile.image} alt={session?.user?.name ?? "User"} />
+                )}
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                   {initials ?? "U"}
                 </AvatarFallback>
@@ -89,7 +98,7 @@ export function Header({ title, subtitle, rightAction }: HeaderProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/settings/profile")}>
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />

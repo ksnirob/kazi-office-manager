@@ -179,9 +179,9 @@ export default function DashboardPage() {
                       <p className="text-sm font-semibold text-foreground">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{userSummaryLabel}</p>
                     </div>
-                    <Badge variant="secondary" className="rounded-lg text-[10px] uppercase tracking-wide">
+                    {/* <Badge variant="secondary" className="rounded-lg text-[10px] uppercase tracking-wide">
                       {user.role}
-                    </Badge>
+                    </Badge> */}
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-xl bg-emerald-500/10 p-2">

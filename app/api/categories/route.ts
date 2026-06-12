@@ -44,3 +44,41 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ error: "Invalid type" }, { status: 400 });
 }
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const { id, type, ...data } = body;
+  if (typeof id !== "string" || !id) {
+    return NextResponse.json({ error: "Category id is required" }, { status: 400 });
+  }
+
+  const parsed = categorySchema.safeParse(data);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  try {
+    if (type === "income") {
+      const cat = await db.incomeCategory.update({
+        where: { id },
+        data: parsed.data,
+      });
+      return NextResponse.json(cat);
+    }
+
+    if (type === "expense") {
+      const cat = await db.expenseCategory.update({
+        where: { id },
+        data: parsed.data,
+      });
+      return NextResponse.json(cat);
+    }
+  } catch {
+    return NextResponse.json({ error: "Category not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+}

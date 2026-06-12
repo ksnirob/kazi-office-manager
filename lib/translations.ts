@@ -169,7 +169,7 @@ export const translations = {
     // Dashboard
     totalIncome: "মোট আয়",
     totalExpenses: "মোট ব্যয়",
-    netProfit: "নিট লাভ",
+    netProfit: "জমা আছে",
     todayIncome: "আজকের আয়",
     thisWeek: "এই সপ্তাহ",
     thisMonth: "এই মাস",
@@ -192,10 +192,10 @@ export const translations = {
     month: "মাস",
     year: "বছর",
     monthlyOverview: "মাসিক পর্যালোচনা",
-    overviewRange: "পর্যালোচনার পরিসর",
+    overviewRange: "পর্যালোচনা",
     last6Months: "শেষ ৬ মাস",
     last12Months: "শেষ ১২ মাস",
-    teamSummary: "ব্যবহারকারী সারসংক্ষেপ",
+    teamSummary: "ব্যবহারকারী",
     allUsers: "সকল ব্যবহারকারী",
     noUsers: "কোনো ব্যবহারকারী পাওয়া যায়নি",
 
