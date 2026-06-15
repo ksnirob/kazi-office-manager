@@ -52,6 +52,8 @@ export async function GET(req: NextRequest) {
     users,
     incomeByUser,
     expenseByUser,
+    monthIncomesByCategory,
+    monthExpensesByCategory,
   ] = await Promise.all([
     db.income.aggregate({ where: { date: { gte: monthStart, lte: monthEnd } }, _sum: { amount: true } }),
     db.expense.aggregate({ where: { date: { gte: monthStart, lte: monthEnd } }, _sum: { amount: true } }),
@@ -91,6 +93,14 @@ export async function GET(req: NextRequest) {
       by: ["createdById"],
       where: { date: { gte: userSummaryStart, lte: userSummaryEnd } },
       _sum: { amount: true },
+    }),
+    db.income.findMany({
+      where: { date: { gte: monthStart, lte: monthEnd } },
+      select: { amount: true, categoryId: true, category: { select: { nameEn: true } } },
+    }),
+    db.expense.findMany({
+      where: { date: { gte: monthStart, lte: monthEnd } },
+      select: { amount: true, categoryId: true, category: { select: { nameEn: true } } },
     }),
   ]);
 
@@ -147,6 +157,22 @@ export async function GET(req: NextRequest) {
     };
   });
 
+  const incomeByCategory = Object.values(
+    monthIncomesByCategory.reduce((acc: Record<string, { name: string; value: number }>, item) => {
+      if (!acc[item.categoryId]) acc[item.categoryId] = { name: item.category.nameEn, value: 0 };
+      acc[item.categoryId].value += item.amount;
+      return acc;
+    }, {})
+  ).sort((a, b) => b.value - a.value);
+
+  const expenseByCategory = Object.values(
+    monthExpensesByCategory.reduce((acc: Record<string, { name: string; value: number }>, item) => {
+      if (!acc[item.categoryId]) acc[item.categoryId] = { name: item.category.nameEn, value: 0 };
+      acc[item.categoryId].value += item.amount;
+      return acc;
+    }, {})
+  ).sort((a, b) => b.value - a.value);
+
   const recentTransactions = [
     ...recentIncomes.map((income) => ({ ...income, type: "income" as const })),
     ...recentExpenses.map((expense) => ({ ...expense, type: "expense" as const })),
@@ -169,5 +195,7 @@ export async function GET(req: NextRequest) {
     userSections,
     recentTransactions,
     monthlyData,
+    incomeByCategory,
+    expenseByCategory,
   });
 }

@@ -84,6 +84,8 @@ export interface DashboardStats {
     expense: number;
     profit: number;
   }>;
+  incomeByCategory: Array<{ name: string; value: number; color?: string }>;
+  expenseByCategory: Array<{ name: string; value: number; color?: string }>;
 }
 
 export interface ReportData {

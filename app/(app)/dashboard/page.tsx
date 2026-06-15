@@ -84,7 +84,7 @@ export default function DashboardPage() {
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {t("overviewRange")}
               </p>
-              <Select value={monthsRange} onValueChange={setMonthsRange}>
+              <Select value={monthsRange} onValueChange={(value) => { if (value) setMonthsRange(value); }}>
                 <SelectTrigger className="rounded-xl h-10">
                   <SelectValue>{selectedRangeLabel}</SelectValue>
                 </SelectTrigger>
