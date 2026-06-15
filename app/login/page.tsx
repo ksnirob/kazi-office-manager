@@ -159,9 +159,9 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-5 text-center text-xs text-slate-500">
+          {/* <p className="mt-5 text-center text-xs text-slate-500">
             Default: admin@kazioffice.com / admin123
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
