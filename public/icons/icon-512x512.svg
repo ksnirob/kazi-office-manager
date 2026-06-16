@@ -1,4 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="113" fill="#4f46e5"/>
-  <text x="50%" y="55%" font-family="sans-serif" font-size="230" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">৳</text>
+  <rect width="512" height="512" rx="113" fill="#1f2937"/>
+  <rect x="128" y="101" width="256" height="310" rx="56" fill="#f8fafc"/>
+  <rect x="171" y="155" width="170" height="27" rx="13.5" fill="#6366f1"/>
+  <rect x="171" y="219" width="107" height="21" rx="10.5" fill="#94a3b8"/>
+  <rect x="171" y="275" width="170" height="21" rx="10.5" fill="#94a3b8"/>
+  <circle cx="333" cy="341" r="72" fill="#10b981"/>
+  <path d="M296 341l24 24 53-64" fill="none" stroke="#fff" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

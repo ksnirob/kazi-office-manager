@@ -11,7 +11,7 @@ export const incomeSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   description: z.string().optional(),
   balamNo: z.string().optional(),
-  pageNo: z.string().optional(),
+  pageNo: z.string().regex(/^\d*$/, "Page number must contain only numbers").optional(),
 });
 
 export const expenseSchema = z.object({

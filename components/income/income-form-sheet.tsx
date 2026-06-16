@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { incomeSchema, type IncomeInput } from "@/lib/validations";
 import type { Resolver } from "react-hook-form";
@@ -48,16 +48,17 @@ export function IncomeFormSheet({
   const {
     register,
     handleSubmit,
+    control,
     setValue,
-    watch,
     reset,
     formState: { errors },
   } = useForm<IncomeInput>({
     resolver: zodResolver(incomeSchema) as Resolver<IncomeInput>,
     defaultValues: { date: format(new Date(), "yyyy-MM-dd") },
   });
+  const pageNoField = register("pageNo");
 
-  const categoryIdValue = watch("categoryId");
+  const categoryIdValue = useWatch({ control, name: "categoryId" });
   const selectedCategory = categories.find((category) => category.id === categoryIdValue);
   const selectedCategoryLabel = selectedCategory
     ? language === "bn"
@@ -169,10 +170,18 @@ export function IncomeFormSheet({
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">{t("pageNo")}</Label>
               <Input
-                {...register("pageNo")}
+                {...pageNoField}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                onChange={(event) => {
+                  event.target.value = event.target.value.replace(/\D/g, "");
+                  pageNoField.onChange(event);
+                }}
                 placeholder="Page number"
                 className="rounded-xl h-10"
               />
+              {errors.pageNo && <p className="text-destructive text-xs">{errors.pageNo.message}</p>}
             </div>
           </div>
 

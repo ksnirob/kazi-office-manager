@@ -47,6 +47,66 @@ type CategoryEditState = {
   nameBn: string;
 };
 
+const PROFILE_IMAGE_MAX_DATA_URL_LENGTH = 1_100_000;
+const PROFILE_IMAGE_OUTPUT_SIZES = [512, 384, 256, 192];
+const PROFILE_IMAGE_QUALITY_STEPS = [0.82, 0.72, 0.62, 0.52, 0.42, 0.32];
+
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Unable to load image"));
+    };
+    image.src = url;
+  });
+}
+
+async function compressProfileImage(file: File) {
+  const image = await loadImage(file);
+  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const sourceX = Math.max(0, Math.round((image.naturalWidth - sourceSize) / 2));
+  const sourceY = Math.max(0, Math.round((image.naturalHeight - sourceSize) / 2));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Image compression is not supported in this browser");
+  }
+
+  for (const outputSize of PROFILE_IMAGE_OUTPUT_SIZES) {
+    const size = Math.min(outputSize, sourceSize);
+    canvas.width = size;
+    canvas.height = size;
+    context.clearRect(0, 0, size, size);
+    context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+
+    for (const quality of PROFILE_IMAGE_QUALITY_STEPS) {
+      const dataUrl = canvas.toDataURL("image/webp", quality);
+
+      if (dataUrl.startsWith("data:image/webp;base64,") && dataUrl.length <= PROFILE_IMAGE_MAX_DATA_URL_LENGTH) {
+        return dataUrl;
+      }
+    }
+
+    for (const quality of PROFILE_IMAGE_QUALITY_STEPS) {
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+      if (dataUrl.length <= PROFILE_IMAGE_MAX_DATA_URL_LENGTH) {
+        return dataUrl;
+      }
+    }
+  }
+
+  throw new Error("Profile picture could not be compressed enough");
+}
+
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
@@ -59,6 +119,7 @@ export default function SettingsPage() {
   const [incomeCatOpen, setIncomeCatOpen] = useState(false);
   const [expenseCatOpen, setExpenseCatOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isCompressingProfileImage, setIsCompressingProfileImage] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: "",
     email: "",
@@ -192,22 +253,23 @@ export default function SettingsPage() {
     setProfileOpen(true);
   };
 
-  const handleProfileImage = (file: File | undefined) => {
+  const handleProfileImage = async (file: File | undefined) => {
     if (!file) return;
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
       toast.error("Use a PNG, JPG, or WebP image");
       return;
     }
-    if (file.size > 800 * 1024) {
-      toast.error("Profile picture must be under 800KB");
-      return;
-    }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setProfileForm((form) => ({ ...form, image: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    setIsCompressingProfileImage(true);
+    try {
+      const compressedImage = await compressProfileImage(file);
+      setProfileForm((form) => ({ ...form, image: compressedImage }));
+      toast.success("Profile picture compressed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to compress profile picture");
+    } finally {
+      setIsCompressingProfileImage(false);
+    }
   };
 
   const displayName = profile?.name ?? session?.user?.name;
@@ -288,6 +350,9 @@ export default function SettingsPage() {
                     onChange={(event) => handleProfileImage(event.target.files?.[0])}
                   />
                 </Label>
+                {isCompressingProfileImage && (
+                  <p className="text-xs text-muted-foreground">Compressing picture...</p>
+                )}
                 {profileForm.image && (
                   <Button
                     type="button"
@@ -349,7 +414,7 @@ export default function SettingsPage() {
                 type="button"
                 className="w-full rounded-xl h-10"
                 onClick={() => profileMutation.mutate()}
-                disabled={profileMutation.isPending || !profileForm.name || !profileForm.email}
+                disabled={profileMutation.isPending || isCompressingProfileImage || !profileForm.name || !profileForm.email}
               >
                 <Save className="h-4 w-4 mr-1.5" />
                 {profileMutation.isPending ? "Saving..." : "Save Profile"}
