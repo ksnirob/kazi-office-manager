@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     title: "Kazi Office",
   },
   icons: {
-    icon: "/icons/icon-192x192.svg?v=2",
+    icon: "/icons/icon-192x192.svg?v=3",
   },
 };
 
