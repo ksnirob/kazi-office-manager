@@ -1,4 +1,4 @@
-const CACHE_NAME = "kazi-office-v3";
+const CACHE_NAME = "kazi-office-v4";
 const OFFLINE_URL = "/offline";
 
 const STATIC_ASSETS = [

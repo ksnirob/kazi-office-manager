@@ -693,20 +693,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* PWA Info */}
-        <div className="rounded-2xl bg-card border border-border/50 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-border/50">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">App Info</p>
-          </div>
-          <div className="px-4 py-3.5 flex items-center gap-3">
-            <Smartphone className="h-4 w-4 text-indigo-500" />
-            <div>
-              <p className="text-sm font-medium">Kazi Office PWA</p>
-              <p className="text-xs text-muted-foreground">Version 1.0.0 • Install for offline use</p>
-            </div>
-          </div>
-        </div>
-
         <a
           href="https://ksnirob.com"
           target="_blank"
@@ -722,6 +708,20 @@ export default function SettingsPage() {
           </div>
           <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
         </a>
+
+        {/* PWA Info */}
+        <div className="rounded-2xl bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/50">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">App Info</p>
+          </div>
+          <div className="px-4 py-3.5 flex items-center gap-3">
+            <Smartphone className="h-4 w-4 text-indigo-500" />
+            <div>
+              <p className="text-sm font-medium">Kazi Office PWA</p>
+              <p className="text-xs text-muted-foreground">Version 1.0.0 • Install for offline use</p>
+            </div>
+          </div>
+        </div>
 
         {/* Logout */}
         <Button
