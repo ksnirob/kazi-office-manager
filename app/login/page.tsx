@@ -107,7 +107,7 @@ export default function LoginPage() {
                   type="text"
                   inputMode="email"
                   autoComplete="username"
-                  placeholder="email or phone number"
+                  placeholder="enter email or phone number"
                   className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-indigo-400 focus:ring-indigo-400/20"
                 />
               </div>
