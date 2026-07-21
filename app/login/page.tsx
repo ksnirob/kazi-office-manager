@@ -38,7 +38,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        toast.error("Invalid email or password");
+        toast.error("Invalid email/phone or password");
       } else {
         toast.success("Login successful!");
         router.push("/dashboard");
@@ -96,13 +96,15 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm">{t("email")}</Label>
+              <Label className="text-slate-300 text-sm">{t("emailOrPhone")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   {...register("email")}
-                  type="email"
-                  placeholder="admin@kazioffice.com"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="username"
+                  placeholder="admin@kazioffice.com or 01787700929"
                   className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-indigo-400 focus:ring-indigo-400/20"
                 />
               </div>

@@ -143,19 +143,21 @@ export async function GET(req: NextRequest) {
     expenseByUser.map((item) => [item.createdById, Number(item._sum.amount ?? 0)])
   );
 
-  const userSections = users.map((user) => {
-    const income = incomeByUserMap.get(user.id) ?? 0;
-    const expense = expenseByUserMap.get(user.id) ?? 0;
+  const userSections = users
+    .map((user) => {
+      const income = incomeByUserMap.get(user.id) ?? 0;
+      const expense = expenseByUserMap.get(user.id) ?? 0;
 
-    return {
-      userId: user.id,
-      name: user.name,
-      role: user.role as "ADMIN" | "MANAGER" | "STAFF",
-      totalIncome: income,
-      totalExpenses: expense,
-      netProfit: income - expense,
-    };
-  });
+      return {
+        userId: user.id,
+        name: user.name,
+        role: user.role as "ADMIN" | "MANAGER" | "STAFF",
+        totalIncome: income,
+        totalExpenses: expense,
+        netProfit: income - expense,
+      };
+    })
+    .filter((user) => user.totalIncome > 0 || user.totalExpenses > 0);
 
   const incomeByCategory = Object.values(
     monthIncomesByCategory.reduce((acc: Record<string, { name: string; value: number }>, item) => {

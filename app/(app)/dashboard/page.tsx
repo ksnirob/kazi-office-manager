@@ -154,23 +154,22 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <Users className="h-4 w-4 text-primary" />
+        {stats?.userSections.length ? (
+          <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground">{t("teamSummary")}</h3>
               </div>
-              <h3 className="text-sm font-semibold text-foreground">{t("teamSummary")}</h3>
+              <Input
+                type="month"
+                value={userSummaryMonth}
+                onChange={(event) => setUserSummaryMonth(event.target.value)}
+                className="h-9 w-36 rounded-xl text-xs"
+              />
             </div>
-            <Input
-              type="month"
-              value={userSummaryMonth}
-              onChange={(event) => setUserSummaryMonth(event.target.value)}
-              className="h-9 w-36 rounded-xl text-xs"
-            />
-          </div>
-
-          {stats?.userSections.length ? (
             <div className="space-y-3">
               {stats.userSections.map((user) => (
                 <div key={user.userId} className="rounded-2xl border border-border/50 p-3 bg-background/60">
@@ -202,10 +201,8 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">{t("noUsers")}</p>
-          )}
-        </div>
+          </div>
+        ) : null}
 
         <div className="rounded-2xl bg-card border border-border/50 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
