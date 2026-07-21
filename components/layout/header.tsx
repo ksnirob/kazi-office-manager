@@ -4,7 +4,7 @@ import { useTheme } from "@/contexts/theme-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,8 +29,9 @@ export function Header({ title, subtitle, rightAction }: HeaderProps) {
   const { language, setLanguage } = useLanguage();
   const { data: session } = useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: profile } = useQuery<{ image?: string | null }>({
-    queryKey: ["profile"],
+    queryKey: ["profile", session?.user?.id],
     queryFn: () => fetch("/api/profile").then((res) => res.json()),
     enabled: Boolean(session?.user),
   });
@@ -104,7 +105,10 @@ export function Header({ title, subtitle, rightAction }: HeaderProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => {
+                  queryClient.clear();
+                  signOut({ callbackUrl: "/login" });
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" /> Logout
               </DropdownMenuItem>

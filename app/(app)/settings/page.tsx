@@ -133,7 +133,7 @@ export default function SettingsPage() {
     queryFn: () => fetch("/api/categories").then((r) => r.json()),
   });
   const { data: profile } = useQuery<{ name: string; email: string; image?: string | null; role?: string }>({
-    queryKey: ["profile"],
+    queryKey: ["profile", session?.user?.id],
     queryFn: () => fetch("/api/profile").then((r) => r.json()),
     enabled: Boolean(session?.user),
   });
@@ -233,8 +233,8 @@ export default function SettingsPage() {
           email: user.email,
         },
       });
-      qc.setQueryData(["profile"], user);
-      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.setQueryData(["profile", session?.user?.id], user);
+      qc.invalidateQueries({ queryKey: ["profile", session?.user?.id] });
       setProfileForm((form) => ({ ...form, currentPassword: "", newPassword: "" }));
       setProfileOpen(false);
       toast.success("Profile updated!");
@@ -376,9 +376,11 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label>Email or phone</Label>
                 <Input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="username"
                   value={profileForm.email}
                   onChange={(event) => setProfileForm((form) => ({ ...form, email: event.target.value }))}
                   className="rounded-xl h-10"
@@ -727,7 +729,10 @@ export default function SettingsPage() {
         <Button
           variant="outline"
           className="w-full rounded-2xl h-12 text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300 dark:border-red-900 dark:hover:bg-red-950"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => {
+            qc.clear();
+            signOut({ callbackUrl: "/login" });
+          }}
         >
           <LogOut className="h-4 w-4 mr-2" />
           {t("logout")}

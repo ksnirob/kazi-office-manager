@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  email: z.string().trim().email("Invalid email"),
+  email: z.string().trim().min(1, "Email or phone is required"),
   image: z
     .string()
     .nullable()

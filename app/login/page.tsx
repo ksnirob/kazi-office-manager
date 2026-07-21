@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { loginSchema, type LoginInput } from "@/lib/validations";
 import { useLanguage } from "@/contexts/language-context";
 import { useTheme } from "@/contexts/theme-context";
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const { t, language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,6 +42,7 @@ export default function LoginPage() {
       if (result?.error) {
         toast.error("Invalid email/phone or password");
       } else {
+        queryClient.clear();
         toast.success("Login successful!");
         router.push("/dashboard");
         router.refresh();
@@ -104,7 +107,7 @@ export default function LoginPage() {
                   type="text"
                   inputMode="email"
                   autoComplete="username"
-                  placeholder="admin@kazioffice.com or 01787700929"
+                  placeholder="email or phone number"
                   className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-slate-500 rounded-xl focus:border-indigo-400 focus:ring-indigo-400/20"
                 />
               </div>
